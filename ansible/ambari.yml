@@ -1,0 +1,11 @@
+- hosts: mgmt
+  become: yes
+  tasks:
+  - name: set up ambari repo
+    get_url:
+      url: http://public-repo-1.hortonworks.com/ambari/centos7/2.x/updates/2.6.0.0/ambari.repo
+      dest: /etc/yum.repos.d/ambari.repo
+      mode: 0644
+     
+#  - name: install ambari-server
+#   yum: pkg=ambari-server state=installed

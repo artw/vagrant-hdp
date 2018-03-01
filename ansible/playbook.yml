@@ -1,0 +1,55 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: set timezone to Europe/Riga
+      timezone: name=Europe/Riga
+
+    - name: ensure ntpd is installed
+      yum: pkg=ntp state=latest
+
+    - name: enable ntpd
+      service: name=ntpd enabled=yes state=started
+
+    - name: epel repo
+      yum: pkg=epel-release state=installed
+
+    - name: misc packages
+      yum:
+        pkg:
+          - tmux
+          - atop
+        state: installed
+          
+    - name: set locale environment
+      lineinfile:
+        path: /etc/environment
+        line: '{{ item }}'
+      with_items:
+          - 'LANG=en_GB.UTF-8'
+          - 'LC_CTYPE=en_GB.UTF-8'
+
+    - name: selinux disable 
+      selinux: state=disabled
+
+    - name: overwrite resolv.conf
+      copy:
+        src: src/resolv.conf
+        dest: /etc/resolv.conf
+        owner: root
+        group: root
+        mode: u=rw,g=r,o=r
+      notify: restart nm
+
+    - name: disable NM dns
+      copy:
+        src: src/nm-no-dns.conf
+        dest: /etc/NetworkManager/conf.d
+        owner: root
+        group: root
+        mode: u=rw,g=r,o=r
+      notify: restart nm
+
+  handlers:
+    - name: restart nm
+      service: name=NetworkManager state=restarted
